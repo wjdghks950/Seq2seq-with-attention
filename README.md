@@ -15,6 +15,10 @@ For further studies about word embeddings, read the papers below:
 1. NMT by Jointly Learning to Algin and Translate (Bahdanau et al.)
 2. Sequence to Sequence Learning with Neural Networks (Sutskever et al.)
 
+## Run
+
+	python3 train.py
+
 
 
  
