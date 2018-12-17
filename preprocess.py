@@ -2,16 +2,16 @@ import torch
 import torch.nn as nn
 import os.path
 import glob as g
+import unicodedata
 
 PAR_DIR='.\data'
 
 class DataProcess():
     def __init__(self, path=PAR_DIR):
         self.path = path
-        self.word2idx = {}
-        self.word2cnt = {}
+        self.eng_word2cnt = {}
+        self.fra_word2cnt = {}
         self.idx2word = {0: 'SOS', 1: 'EOS'}
-        self.n_words = 2
 
     def read_data(self):
         # Read data from the specified path
@@ -25,14 +25,34 @@ class DataProcess():
             print('File open failed: ', e.strerror)
         return data
 
-    def build_dict(self, sentence):
-        for word in sentence:
-            if word not in self.word2idx:
-                self.word2idx[word] = self.n_words
-                self.word2cnt[word] = 1
-                self.idx2word[self.n_words] = word
-            else:
-                self.word2cnt[word] += 1
+    def getCount(self, dict_data):
+        return dict_data[1]
+
+    def build_dict(self, data):
+        for s in data['eng']:
+            for word in s.split():
+                if word in self.eng_word2cnt:
+                    self.eng_word2cnt[word] += 1
+                else:
+                    self.eng_word2cnt[word] = 1
+        for s in data['fra']:
+            for word in s.split():
+                if word in self.fra_word2cnt:
+                    self.fra_word2cnt[word] += 1
+                else:
+                    self.fra_word2cnt[word] = 1
+        # Add the end of sentence token to each word count
+        self.eng_word2cnt['</s>'] = len(data['eng'])
+        self.fra_word2cnt['</s>'] = len(data['fra'])
+        # Sort according to word occurrence
+        sorted_eng = sorted(self.eng_word2cnt.items(), key=self.getCount, reverse=True)
+        sorted_fra = sorted(self.fra_word2cnt.items(), key=self.getCount, reverse=True)
+
+        print(sorted_eng[:10])
+        print('\n', sorted_fra[:10])
+
+    def to_ascii(self, sentence):
+        return ''.join(c for c in unicodedata.normalize('NFD', sentence) if unicodedata.category(c) != 'Mn')
 
     def preprocess(self):
         reader = self.read_data()
@@ -43,11 +63,12 @@ class DataProcess():
         print('Number of French sentences:', len(data['fra']))
         print('[Example pair]:\n', data['eng'][3], '\n', data['fra'][3])
         
+        self.build_dict(data) # Make dictionary from vocabs in dataset
+
         max_seq_len = 0
         # Calculate the longest sequence length in both English and French sentences
         for key, val in data.items():
             for sentence in val:
-                self.build_dict(sentence) # Make dictionary from vocabs in dataset
                 length = len(sentence.split())
                 max_seq_len = max(max_seq_len, length)
 
