@@ -50,7 +50,7 @@ class DecoderRNN(nn.Module):
         # Attention weight calculation
         attn_input = torch.cat((embed[0], hidden[0]), 1))
         attn_weight = F.softmax(self.attn_layer(attn_input), dim=1)
-        attn_output = torch.bmm(attn_weight.unsqueez(0), enc_output.unsquees(0)) # applying attention weight to context vector
+        attn_output = torch.bmm(attn_weight.unsqueeze(0), enc_output.unsqueeze(0)) # applying attention weight to context vector
         # Making decoder rnn input
         dec_input = torch.cat((embed[0], attn_output), 1) # concatenate embedded prev dec output and attn_output as dec input
         dec_input = F.relu(self.attn_to_dec(dec_input)) # fully-connected + relu
