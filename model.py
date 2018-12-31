@@ -3,9 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-MAX_LEN = 10
+MAX_LEN = 20
 
 class EncoderBRNN(nn.Module):
     # A bidirectional rnn based encoder
@@ -27,12 +25,12 @@ class EncoderBRNN(nn.Module):
 
 class DecoderRNN(nn.Module):
     # A rnn decoder using seq2seq attention mechanism
-    def __init__(self, output_size, hidden_size, emb_size, dropout_p=0.1, max_len=10):
+    def __init__(self, output_size, hidden_size, emb_size, dropout_p=0.1, max_seq_len=MAX_LEN):
         super(DecoderRNN, self).__init__()
         self.output_size = output_size
         self.hidden_size = hidden_size
         self.dropout_p = dropout_p
-        self.max_len = max_len
+        self.max_seq_len = max_seq_len
         self.embedding_dim = emb_size
         self.embedding_layer = nn.Embedding(self.output_size, self.embedding_dim)
         '''
@@ -40,7 +38,7 @@ class DecoderRNN(nn.Module):
          i) Final hidden state of Encoder(hidden_size)
          ii) Embedded decoder input (embedding_dim)
         '''
-        self.attn_layer = nn.Linear((self.hidden_size + self.embedding_dim), self.max_len)
+        self.attn_layer = nn.Linear((self.hidden_size + self.embedding_dim), self.max_seq_len)
         self.attn_to_dec = nn.Linear((self.hidden_size + self.embedding_dim), self.hidden_size)
         self.dec_layer = nn.LSTM(self.hidden_size, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, self.output_size)
@@ -48,7 +46,10 @@ class DecoderRNN(nn.Module):
     def forward(self, input, hidden, enc_output):
         embed = self.embedding_layer(input).view(1, 1, -1) # dim(1, batch_size) -> dim(1, batch_size, embedding_dim)
         # Attention weight calculation
+        print('Decoder input size:', embed.size())
+        print('Hidden state size: ', hidden.size())
         attn_input = torch.cat((embed[0], hidden[0]), 1))
+        print('Attention input [Embedded decoder input, hidden state] size: ', attn_input.size())
         attn_weight = F.softmax(self.attn_layer(attn_input), dim=1)
         attn_output = torch.bmm(attn_weight.unsqueeze(0), enc_output.unsqueeze(0)) # applying attention weight to context vector
         # Making decoder rnn input
