@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import random
+from preprocess import DataProcess
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -61,5 +62,9 @@ class TrainModel():
 
         return loss.item() / target_len
     
-    def trainIters(self, encoder, decoder, epochs, ):
+    def trainIters(self, lang1, lang2, encoder, decoder):
+        enc_optimizer = optim.Adam(encoder.parameters, lr=self.opt['lr'])
+        dec_optimizer = optim.Adam(decoder.optimizer, lr=self.opt['lr'])
 
+        d = DataProcess()
+        data = d.preprocess()
