@@ -62,9 +62,27 @@ class TrainModel():
 
         return loss.item() / target_len
     
-    def trainIters(self, lang1, lang2, encoder, decoder):
-        enc_optimizer = optim.Adam(encoder.parameters, lr=self.opt['lr'])
-        dec_optimizer = optim.Adam(decoder.optimizer, lr=self.opt['lr'])
+    def trainIters(self, lang1, lang2, encoder, decoder, show_iter = 100):
+        enc_optimizer = optim.Adam(encoder.parameters(), lr=self.opt['lr'])
+        dec_optimizer = optim.Adam(decoder.parameters(), lr=self.opt['lr'])
+        total_loss = 0
 
         d = DataProcess()
-        data = d.preprocess()
+        seq_pair = d.preprocess()
+        train_pair = [random.choice(seq_pairs) for i in range(self.opt['epoch'])]
+        for iter in range(1, self.opt['epoch'] + 1):
+            train_pair = train_pair[iter - 1]
+            input = train_pair[0][0]
+            target = train_pair[0][1]
+            criterion = nn.NLLLoss()
+            # Calculate loss
+            loss = self.train(input, target, encoder, decoder, enc_optimizer, dec_optimizer, criterion)
+            total_loss += loss
+
+            if iter % show_iter == 0:
+                avg_loss = total_loss / show_iter
+                print(iter, 'th iteration:', '/Loss:', avg_loss)
+
+
+class Evaluator():
+    def __init__(self, max_seq_len=MAX_LEN):
