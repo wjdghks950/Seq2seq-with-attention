@@ -39,6 +39,7 @@ class Language():
         return max_seq_len
 
     def sentence2tensor(self, max_seq_len):
+        # Turns each sequence from words to indices in a tensor form
         sent_tensor = []
         cnt = 0
         for s in self.sentences:
@@ -72,6 +73,9 @@ class DataProcess():
     def to_ascii(self, sentence):
         return ''.join(c for c in unicodedata.normalize('NFD', sentence) if unicodedata.category(c) != 'Mn')
 
+    def makePair(self, lang1, lang2):
+        return (lang1, lang2)
+
     def preprocess(self):
         reader = self.read_data()
         eng = Language('eng')
@@ -89,7 +93,9 @@ class DataProcess():
         data['eng'] = eng.sentence2tensor(data['max_len'])
         data['fra'] = fra.sentence2tensor(data['max_len'])
 
-        return data
+        seq_pair = self.makePair(data['eng'], data['fra'])
+
+        return seq_pair
 
 if __name__ == '__main__':
     d = DataProcess()
