@@ -30,7 +30,7 @@ class TrainModel():
         input_len = input.size(0)
         print('Input length: ', input_len)
         target_len = target.size(0)
-        enc_output = torch.zeros(self.opt['max_seq_len'], encoder.hidden_size, device=device)
+        enc_output_tensor = torch.zeros(self.opt['max_seq_len'], encoder.hidden_size, device=device)
         enc_hidden = encoder.initHidden()
 
         for word_idx in range(input_len):
