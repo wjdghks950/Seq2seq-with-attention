@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import random
 from preprocess import DataProcess
+from model import EncoderBRNN, DecoderRNN
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -12,7 +13,7 @@ SOS_token = '<\s>'
 EOS_token = '<\e>'
 
 class TrainModel():
-    def __init__(self, learning_rate=1e-3, batch_size=1, teacher_forcing=0.5, epoch=5000, max_seq_len=MAX_LEN):
+    def __init__(self, learning_rate=1e-3, batch_size=1, teacher_forcing=0.5, epoch=50000, max_seq_len=MAX_LEN):
         self.opt = {}
         self.opt['lr'] = learning_rate
         self.opt['batch_size'] = batch_size
@@ -62,18 +63,17 @@ class TrainModel():
 
         return loss.item() / target_len
     
-    def trainIters(self, lang1, lang2, encoder, decoder, show_iter = 100):
+    def trainIters(self, input_target_pair, encoder, decoder, show_iter = 100):
         enc_optimizer = optim.Adam(encoder.parameters(), lr=self.opt['lr'])
         dec_optimizer = optim.Adam(decoder.parameters(), lr=self.opt['lr'])
         total_loss = 0
 
-        d = DataProcess()
-        seq_pair = d.preprocess()
+        seq_pair = input_target_pair
         train_pair = [random.choice(seq_pairs) for i in range(self.opt['epoch'])]
         for iter in range(1, self.opt['epoch'] + 1):
             train_pair = train_pair[iter - 1]
-            input = train_pair[0][0]
-            target = train_pair[0][1]
+            input = train_pair[0]
+            target = train_pair[1]
             criterion = nn.NLLLoss()
             # Calculate loss
             loss = self.train(input, target, encoder, decoder, enc_optimizer, dec_optimizer, criterion)
@@ -83,6 +83,17 @@ class TrainModel():
                 avg_loss = total_loss / show_iter
                 print(iter, 'th iteration:', '/Loss:', avg_loss)
 
-
+'''
 class Evaluator():
     def __init__(self, max_seq_len=MAX_LEN):
+        with torch.no_grad():
+'''
+
+if __name__ == '__main__':
+    d = DataProcess()
+    data, seq_pair = d.preprocess()
+    encoder = EncoderBRNN(data['fra'].getnwords(), 256, 300)
+    decoder = DecoderRNN(data['eng'].getnwords(), 256, 300)
+
+    trainer = TrainModel(batch_size=16)
+    trainer.trainIters(seq_pair, encoder, decoder)
