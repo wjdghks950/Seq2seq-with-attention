@@ -83,7 +83,16 @@ class DataProcess():
         return ''.join(c for c in unicodedata.normalize('NFD', sentence) if unicodedata.category(c) != 'Mn')
 
     def makePair(self, lang1, lang2):
-        return (lang1, lang2)
+        lang_pair = []
+        len_lang1 = list(lang1.size())[0]
+        len_lang2 = list(lang2.size())[0]
+        len_data = max(len_lang1, len_lang2)
+        for i in range(len_data):
+            pair = list((lang1[i], lang2[i]))
+            lang_pair.append(pair)
+        
+        print(lang_pair[:3])
+        return lang_pair
 
     def preprocess(self):
         reader = self.read_data()
@@ -102,7 +111,9 @@ class DataProcess():
         data['eng'] = eng
         data['fra'] = fra
 
-        seq_pair = self.makePair(eng.sentence2tensor(data['max_len']), fra.sentence2tensor(data['max_len']))
+        eng_tensor = eng.sentence2tensor(data['max_len'])
+        fra_tensor = fra.sentence2tensor(data['max_len'])
+        seq_pair = self.makePair(eng_tensor, fra_tensor)
 
         return data, seq_pair
 
