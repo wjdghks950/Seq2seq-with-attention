@@ -51,6 +51,9 @@ class Language():
         print(len(sent_tensor))
         return torch.tensor(sent_tensor, dtype=torch.long, device=device).view(len(sent_tensor), max_seq_len)
 
+    def getnwords(self):
+        return self.num_words
+        
     def langName(self):
         return self.lang
 
@@ -90,12 +93,12 @@ class DataProcess():
         print('Longest sequence in both langs: ', max_seq_len)
         data = {}
         data['max_len'] = max_seq_len + 1
-        data['eng'] = eng.sentence2tensor(data['max_len'])
-        data['fra'] = fra.sentence2tensor(data['max_len'])
+        data['eng'] = eng
+        data['fra'] = fra
 
-        seq_pair = self.makePair(data['eng'], data['fra'])
+        seq_pair = self.makePair(eng.sentence2tensor(data['max_len']), fra.sentence2tensor(data['max_len']))
 
-        return seq_pair
+        return data, seq_pair
 
 if __name__ == '__main__':
     d = DataProcess()
