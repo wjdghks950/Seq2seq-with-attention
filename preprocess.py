@@ -8,14 +8,15 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 PAR_DIR='.\data'
 SOS_token = '<\s>'
 EOS_token = '<\e>'
+PAD_token = '<\p>'
 
 class Language():
     def __init__(self, lang='UNK'):
         self.lang = lang
         self.sentences = []
         self.word2cnt = {}
-        self.word2idx = {SOS_token: 0, EOS_token: 1}
-        self.idx2word = {0: SOS_token, 1: EOS_token}
+        self.word2idx = {SOS_token: 0, EOS_token: 1, PAD_token: -1}
+        self.idx2word = {-1: PAD_token, 0: SOS_token, 1: EOS_token}
         self.num_words = 2
     
     def parseSentence(self, sentence):
@@ -45,15 +46,20 @@ class Language():
         for s in self.sentences:
             indices = []
             s += ' ' + EOS_token # Append EOS token at the end of each sentence
-            for word in s.split():
+            s_char = s.split()
+            if len(s_char) < max_seq_len:
+                # Pad sequences shorter than the longest sequence
+                s_char += [PAD_token] * (max_seq_len - len(s_char))
+            for word in s_char:
                 indices.append(self.word2idx[word])
             sent_tensor.append(indices)
-        print(len(sent_tensor))
+        print(sent_tensor[: 3])
+        #sent_tensor = list(map(int, sent_tensor))
         return torch.tensor(sent_tensor, dtype=torch.long, device=device).view(len(sent_tensor), max_seq_len)
 
     def getnwords(self):
         return self.num_words
-        
+
     def langName(self):
         return self.lang
 
