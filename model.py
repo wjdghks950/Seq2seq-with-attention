@@ -7,21 +7,28 @@ MAX_LEN = 20
 
 class EncoderBRNN(nn.Module):
     # A bidirectional rnn based encoder
-    def __init__(self, input_size, hidden_size, emb_size, bidir=True):
+    def __init__(self, input_size, hidden_size, emb_size, batch_size=1, num_layers=2, bidir=True):
         super(EncoderBRNN, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
+        self.batch_size = batch_size
         self.embedding_dim = emb_size
+        self.num_layers = num_layers
+        self.bidir = bidir
         self.embedding_layer = nn.Embedding(self.input_size, self.embedding_dim)
-        self.enc_layer = nn.LSTM(self.embedding_dim, self.hidden_size, num_layers=2, bidirectional=bidir)
+        self.enc_layer = nn.LSTM(self.embedding_dim, self.hidden_size, num_layers=self.num_layers, bidirectional=self.bidir)
 
     def forward(self, input, hidden):
         embed = self.embedding_layer(input).view(1, 1, -1)
         output, hidden = self.enc_layer(embed, hidden)
         return output, hidden
 
-    def initHidden(self):
-        return torch.zeros(1, 1, self.hidden_size, device=device)
+    def initHidden(self, device):
+        if self.bidir:
+            num_stacks = self.num_layers * 2
+        else:
+            num_stacks = self.num_layers
+        return torch.zeros(num_stacks, self.batch_size, self.hidden_size, device=device) #TODO:Dimensionality error
 
 class DecoderRNN(nn.Module):
     # A rnn decoder using seq2seq attention mechanism
@@ -48,7 +55,7 @@ class DecoderRNN(nn.Module):
         # Attention weight calculation
         print('Decoder input size:', embed.size())
         print('Hidden state size: ', hidden.size())
-        attn_input = torch.cat((embed[0], hidden[0]), 1))
+        attn_input = torch.cat((embed[0], hidden[0]), 1)
         print('Attention input [Embedded decoder input, hidden state] size: ', attn_input.size())
         attn_weight = F.softmax(self.attn_layer(attn_input), dim=1)
         attn_output = torch.bmm(attn_weight.unsqueeze(0), enc_output.unsqueeze(0)) # applying attention weight to context vector
