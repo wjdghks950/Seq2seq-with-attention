@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import random
+import numpy as np
 from preprocess import DataProcess
 from model import EncoderBRNN, DecoderRNN
 
@@ -13,10 +14,9 @@ SOS_token = '<\s>'
 EOS_token = '<\e>'
 
 class TrainModel():
-    def __init__(self, learning_rate=1e-3, batch_size=1, teacher_forcing=0.5, epoch=50000, max_seq_len=MAX_LEN):
+    def __init__(self, learning_rate=1e-3, teacher_forcing=0.5, epoch=50000, max_seq_len=MAX_LEN):
         self.opt = {}
         self.opt['lr'] = learning_rate
-        self.opt['batch_size'] = batch_size
         self.opt['max_seq_len'] = max_seq_len
         self.opt['teacher_forcing'] = teacher_forcing
         self.opt['epoch'] = epoch
@@ -29,12 +29,12 @@ class TrainModel():
         
         pair = (input, target)
         input_len = input.size(0)
-        print('Input length: ', input_len)
         target_len = target.size(0)
         enc_output_tensor = torch.zeros(self.opt['max_seq_len'], encoder.hidden_size, device=device)
-        enc_hidden = encoder.initHidden()
+        enc_hidden = encoder.cuda().initHidden(device)
 
         for word_idx in range(input_len):
+            print('Input:', input[word_idx], '\nHidden shape:', enc_hidden.size())
             enc_output, enc_hidden = encoder(input[word_idx], enc_hidden)
             enc_output_tensor[word_idx] = enc_output[0,0]
 
@@ -69,9 +69,11 @@ class TrainModel():
         total_loss = 0
 
         seq_pair = input_target_pair
-        train_pair = [random.choice(seq_pairs) for i in range(self.opt['epoch'])]
+        train_pairs = [random.choice(seq_pair) for i in range(self.opt['epoch'])] # Random selection of train_pairs
+        #TODO: Create k-folds for k-fold cross validation
+
         for iter in range(1, self.opt['epoch'] + 1):
-            train_pair = train_pair[iter - 1]
+            train_pair = train_pairs[iter - 1]
             input = train_pair[0]
             target = train_pair[1]
             criterion = nn.NLLLoss()
@@ -92,8 +94,8 @@ class Evaluator():
 if __name__ == '__main__':
     d = DataProcess()
     data, seq_pair = d.preprocess()
-    encoder = EncoderBRNN(data['fra'].getnwords(), 256, 300)
-    decoder = DecoderRNN(data['eng'].getnwords(), 256, 300)
+    encoder = EncoderBRNN(data['eng'].getnwords(), 256, 300)
+    decoder = DecoderRNN(data['fra'].getnwords(), 256, 300)
 
-    trainer = TrainModel(batch_size=16)
+    trainer = TrainModel()
     trainer.trainIters(seq_pair, encoder, decoder)
