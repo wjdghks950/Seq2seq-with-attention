@@ -53,7 +53,6 @@ class Language():
             for word in s_char:
                 indices.append(self.word2idx[word])
             sent_tensor.append(indices)
-        print(sent_tensor[: 3])
         #sent_tensor = list(map(int, sent_tensor))
         return torch.tensor(sent_tensor, dtype=torch.long, device=device).view(len(sent_tensor), max_seq_len)
 
