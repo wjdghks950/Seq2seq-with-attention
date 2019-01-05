@@ -7,7 +7,7 @@ MAX_LEN = 20
 
 class EncoderBRNN(nn.Module):
     # A bidirectional rnn based encoder
-    def __init__(self, input_size, hidden_size, emb_size, batch_size=1, num_layers=2, bidir=True):
+    def __init__(self, input_size, hidden_size, emb_size, batch_size=1, num_layers=1, bidir=True):
         super(EncoderBRNN, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -28,7 +28,7 @@ class EncoderBRNN(nn.Module):
             num_stacks = self.num_layers * 2
         else:
             num_stacks = self.num_layers
-        return torch.zeros(num_stacks, self.batch_size, self.hidden_size, device=device) #TODO:Dimensionality error
+        return torch.zeros(1, num_stacks, self.batch_size, self.hidden_size, device=device) #TODO:Dimensionality error
 
 class DecoderRNN(nn.Module):
     # A rnn decoder using seq2seq attention mechanism
