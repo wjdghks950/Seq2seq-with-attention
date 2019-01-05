@@ -51,10 +51,11 @@ class Language():
                 # Pad sequences shorter than the longest sequence
                 s_char += [PAD_token] * (max_seq_len - len(s_char))
             for word in s_char:
-                indices.append(self.word2idx[word])
+                indices.append([self.word2idx[word]])
             sent_tensor.append(indices)
-        #sent_tensor = list(map(int, sent_tensor))
-        return torch.tensor(sent_tensor, dtype=torch.long, device=device).view(len(sent_tensor), max_seq_len)
+        print(sent_tensor[:3])
+
+        return torch.tensor(sent_tensor, dtype=torch.long, device=device)
 
     def getnwords(self):
         return self.num_words
@@ -112,6 +113,7 @@ class DataProcess():
 
         eng_tensor = eng.sentence2tensor(data['max_len'])
         fra_tensor = fra.sentence2tensor(data['max_len'])
+        print('English tensor size:', eng_tensor.size(), fra_tensor.size())
         seq_pair = self.makePair(eng_tensor, fra_tensor)
 
         return data, seq_pair
