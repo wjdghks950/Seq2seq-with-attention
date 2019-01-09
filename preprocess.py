@@ -53,8 +53,7 @@ class Language():
             for word in s_char:
                 indices.append([self.word2idx[word]])
             sent_tensor.append(indices)
-        print(sent_tensor[:3])
-
+            
         return torch.tensor(sent_tensor, dtype=torch.long, device=device)
 
     def getnwords(self):
@@ -91,7 +90,6 @@ class DataProcess():
             pair = list((lang1[i], lang2[i]))
             lang_pair.append(pair)
         
-        print(lang_pair[:3])
         return lang_pair
 
     def preprocess(self):
@@ -113,7 +111,7 @@ class DataProcess():
 
         eng_tensor = eng.sentence2tensor(data['max_len'])
         fra_tensor = fra.sentence2tensor(data['max_len'])
-        print('English tensor size:', eng_tensor.size(), fra_tensor.size())
+        print('English tensor size:', eng_tensor.size(), 'French tensor size:', fra_tensor.size())
         seq_pair = self.makePair(eng_tensor, fra_tensor)
 
         return data, seq_pair
