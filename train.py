@@ -30,12 +30,12 @@ class TrainModel():
         pair = (input, target)
         input_len = input.size(0)
         target_len = target.size(0)
-        enc_output_tensor = torch.zeros(self.opt['max_seq_len'], encoder.hidden_size, device=device)
-        enc_hidden = encoder.cuda().initHidden(device)
+        enc_output_tensor = torch.zeros(self.opt['max_seq_len'], encoder.hidden_size * 2, device=device) #encoder.hidden_size * 2 (if bidir=True)
+        enc_hidden, enc_cellstate = encoder.initHiddenLSTM(device)
 
         for word_idx in range(input_len):
-            print('Input:', input[word_idx], '\nHidden shape:', enc_hidden.size())
-            enc_output, enc_hidden = encoder(input[word_idx], enc_hidden)
+            #print('Input:', input[word_idx], '\nHidden:', enc_hidden, '\nCell state:', enc_cellstate)
+            enc_output, (enc_hidden, enc_cellstate) = encoder(input[word_idx], (enc_hidden, enc_cellstate)) #LSTM receives as input: {x, (hiddn, cell_state)}
             enc_output_tensor[word_idx] = enc_output[0,0]
 
         dec_input = torch.tensor([[SOS_token]], device=device)
@@ -98,4 +98,4 @@ if __name__ == '__main__':
     decoder = DecoderRNN(data['fra'].getnwords(), 256, 300)
 
     trainer = TrainModel()
-    trainer.trainIters(seq_pair, encoder, decoder)
+    trainer.trainIters(seq_pair, encoder.cuda(), decoder.cuda())
