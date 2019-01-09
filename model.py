@@ -23,12 +23,22 @@ class EncoderBRNN(nn.Module):
         output, hidden = self.enc_layer(embed, hidden)
         return output, hidden
 
-    def initHidden(self, device):
+    def initHiddenLSTM(self, device):
         if self.bidir:
             num_stacks = self.num_layers * 2
         else:
             num_stacks = self.num_layers
-        return torch.zeros(1, num_stacks, self.batch_size, self.hidden_size, device=device) #TODO:Dimensionality error
+        hidden_state = torch.zeros(num_stacks, self.batch_size, self.hidden_size, device=device)
+        cell_state = torch.zeros(num_stacks, self.batch_size, self.hidden_size, device=device)
+        return hidden_state, cell_state
+
+    def initHiddenGRU(self, device):
+        if self.bidir:
+            num_stacks = self.num_layers * 2
+        else:
+            num_stacks = self.num_layers
+        hidden_state = torch.zeros(num_stacks, self.batch_size, self.hidden_size, device=device)
+        return hidden_state
 
 class DecoderRNN(nn.Module):
     # A rnn decoder using seq2seq attention mechanism
