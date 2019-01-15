@@ -67,7 +67,7 @@ class DecoderRNN(nn.Module):
         print('Hidden state size: ', hidden.size())
         attn_input = torch.cat((embed[0], hidden[0]), 1)
         print('Attention input [Embedded decoder input, hidden state] size: ', attn_input.size())
-        attn_weight = F.softmax(self.attn_layer(attn_input), dim=1)
+        attn_weight = F.softmax(self.attn_layer(attn_input), dim=1) # calculating the weights of the attention layer
         attn_output = torch.bmm(attn_weight.unsqueeze(0), enc_output.unsqueeze(0)) # applying attention weight to context vector
         # Making decoder rnn input
         dec_input = torch.cat((embed[0], attn_output), 1) # concatenate embedded prev dec output and attn_output as dec input
